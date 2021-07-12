@@ -3,8 +3,8 @@ from django.views.generic.list import ListView
 from django.views.generic import View
 
 from .choices import *
-
 from .models import Listings
+from .utils import photoList
 
 
 class ListingsView(ListView):
@@ -14,22 +14,15 @@ class ListingsView(ListView):
     template_name_suffix = ''
     context_object_name = 'listings'
 
+
 class ListingDetail(View):
     template = 'listings/listing.html'
-
-    def photoList(self, listings):
-        internal_photos = []
-        for i in range(1, 6):
-            if getattr(listings, 'photo_%d' % i):
-                photo = getattr(listings, 'photo_%d' % i)
-                internal_photos.append(photo)
-        return internal_photos
 
     def get(self, request, listing_id):
         listing = get_object_or_404(Listings, pk=listing_id)
         context = {
             'listing': listing,
-            'internal_photos': self.photoList(listing)
+            'internal_photos': photoList(listing)
         }
         return render(request, self.template, context)
 
