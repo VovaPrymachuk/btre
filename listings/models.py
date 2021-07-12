@@ -1,5 +1,8 @@
+from typing import Literal
 from django.db import models
 from datetime import datetime
+
+from django.db.models import fields
 from realtors.models import Realtor
 
 

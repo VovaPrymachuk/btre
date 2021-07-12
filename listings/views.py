@@ -1,39 +1,37 @@
 from django.shortcuts import get_object_or_404, render
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic.list import ListView
+from django.views.generic import View
+
 from .choices import *
 
 from .models import Listings
 
 
-def index(request):
-    listings = Listings.objects.order_by(
+class ListingsView(ListView):
+    queryset = Listings.objects.order_by(
         '-list_date').filter(is_published=True)
+    paginate_by = 3
+    template_name_suffix = ''
+    context_object_name = 'listings'
 
-    paginator = Paginator(listings, 3)
-    page = request.GET.get('page')
-    paged_listings = paginator.get_page(page)
+class ListingDetail(View):
+    template = 'listings/listing.html'
 
-    context = {'listings': paged_listings}
+    def photoList(self, listings):
+        internal_photos = []
+        for i in range(1, 6):
+            if getattr(listings, 'photo_%d' % i):
+                photo = getattr(listings, 'photo_%d' % i)
+                internal_photos.append(photo)
+        return internal_photos
 
-    return render(request, 'listings/listings.html', context)
-
-
-def listing(request, listing_id):
-    listing = get_object_or_404(Listings, pk=listing_id)
-
-    # getting internal photos
-    internal_photos = []
-    for i in range(1, 6):
-        if getattr(listing, 'photo_%d' % i):
-            photo = getattr(listing, 'photo_%d' % i)
-            internal_photos.append(photo)
-
-    context = {
-        'listing': listing,
-        'internal_photos': internal_photos
-    }
-
-    return render(request, 'listings/listing.html', context)
+    def get(self, request, listing_id):
+        listing = get_object_or_404(Listings, pk=listing_id)
+        context = {
+            'listing': listing,
+            'internal_photos': self.photoList(listing)
+        }
+        return render(request, self.template, context)
 
 
 def search(request):
